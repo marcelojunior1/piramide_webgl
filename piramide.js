@@ -2,7 +2,7 @@ window.onload = main;
 
 // VARIAVEIS GLOBAIS
 // CONSTANTES
-const gFov = 30
+const gFov = 25
 const eye = vec3(3,3,3)
 const at =  vec3(2,2,2)
 const up =  vec3(1,1,4)
@@ -22,11 +22,10 @@ var rotacao = 0.0;
 
 var indices = [
     0,1,2,
-    0,4,5,
-    0,7,8,
-    0,10,11,
-    12,13,14,
-    12,13,17
+    3,4,5,
+    6,7,8,
+    9,10,11,
+    12,13,14, 12,13,17,
 ];
 
 var cores_faces = [
@@ -34,36 +33,37 @@ var cores_faces = [
     [0.0, 1.0, 0.0, 1.0],
     [0.0, 0.0, 1.0, 1.0],
     [1.0, 1.0, 1.0, 1.0],
-    [0.0, 0.0, 0.0, 1.0],
-    [0.0, 0.0, 0.0, 1.0],
+    [0.0, 1.0, 1.0, 1.0],
+    [0.0, 1.0, 1.0, 1.0],
 ];
 
 var gPositions = [
     //Faces
-    0,0,1,
-    1,0,0,
-    0,1,0,
+    0.0, 0.0, 1.0,
+    0.0, 1.0, 0.0,
+    1.0, 0.0, 0.0,
 
-    0,0,1,
-    0,1,0,
-    -1,0,0,
+    0.0, 0.0, 1.0,
+    0.0, 1.0, 0.0,
+    -1.0, 0.0, 0.0,
 
-    0,0,1,
-    -1,0,0,
-    0,-1,0,
+    0.0, 0.0, 1.0,
+    -1.0, 0.0, 0.0,
+    0.0, -1.0, 0.0,
 
-    0,0,1,
-    0,-1,0,
-    1,0,0,
+    0.0, 0.0, 1.0,
+    0.0, -1.0, 0.0,
+    1.0, 0.0, 0.0,
+
 
     //Base
-    -1,0,0,
-    1,0,0,
-    0,-1,0,
+    -1.0, 0.0, 0.0,
+    1.0, 0.0, 0.0,
+    0.0, -1.0, 0.0,
 
-    -1,0,0,
-    1,0,0,
-    0,1,0
+    -1.0, 0.0, 0.0,
+    1.0, 0.0, 0.0,
+    0.0, 1.0, 0.0
 ];
 
 function main()
@@ -76,15 +76,13 @@ function main()
 
     inicia_shaders();
 
-    var then = 0;
-
-    function render(now)
+    var antes = 0;
+    function render(agora)
     {
-        now *= 0.0001;
-        const deltaTime = now - then;
-        then = now;
-
-        desenhe(deltaTime);
+        agora /= 10000;
+        const delta = agora - antes;
+        antes = agora;
+        desenhe(delta);
 
         requestAnimationFrame(render);
     }
@@ -95,7 +93,7 @@ function main()
 
 function desenhe(delta)
 {
-    console.log("OK")
+    // Limpa a tela
     gl.clearColor(0.1, 0.0, 0.0, 1.0);
     gl.clearDepth(1.0);
     gl.enable(gl.DEPTH_TEST);
@@ -107,7 +105,7 @@ function desenhe(delta)
     const projectionMatrix = perspective(gFov,aspect,near,far)
 
     // Matriz Model View
-    var modelViewMatrix = lookAt( eye, at, up );
+    var modelViewMatrix = lookAt(eye, at, up);
 
     // Leitura dos vertices
     {
@@ -129,12 +127,14 @@ function desenhe(delta)
 
     // Transformacoes
 
+    //matriz_translacao = translate(-0.0, 0.0, -6.0)
+    //modelViewMatrix = mult(modelViewMatrix, matriz_translacao)
+
     matriz_rotacao = rotate(rotacao, vec3(0, 0, 1))
     modelViewMatrix = mult(modelViewMatrix, matriz_rotacao)
 
     matriz_rotacao = rotate(rotacao, vec3(0, 1, 0))
     modelViewMatrix = mult(modelViewMatrix, matriz_rotacao)
-
 
     rotacao = (rotacao + delta*1000)%360
 
@@ -155,9 +155,6 @@ function desenhe(delta)
             offset);
         gl.enableVertexAttribArray(programInfo.attribLocations.vertexColor);
     }
-
-
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gIndiceBuffer);
 
     gl.uniformMatrix4fv(
         programInfo.uniformLocations.projectionMatrix,
@@ -195,7 +192,7 @@ function inicia_shaders()
     for (var j = 0; j < cores_faces.length; ++j)
     {
         const c = cores_faces[j];
-        colors = colors.concat(c, c, c, c);
+        colors = colors.concat(c, c, c);
     }
 
     gBufferCor = gl.createBuffer();
@@ -210,9 +207,9 @@ function inicia_shaders()
     // Indexando as faces
     gIndiceBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gIndiceBuffer);
-
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
 
+    // Informacoes do programa
      programInfo = {
         program: gShader.program,
         attribLocations: {
