@@ -1,7 +1,13 @@
 window.onload = main;
 
 // VARIAVEIS GLOBAIS
+// CONSTANTES
 const gFov = 30
+const eye = vec3(3,3,3)
+const at =  vec3(2,2,2)
+const up =  vec3(1,1,4)
+const near= 0.1;
+const far = 100.0;
 
 var gl;
 var gCanvas;
@@ -12,15 +18,15 @@ var gBufferVertices
 var gIndiceBuffer
 var programInfo;
 
-var cubeRotation = 0.0;
+var rotacao = 0.0;
 
 var indices = [
     0,1,2,
-    3,4,5,
-    6,7,8,
-    9,10,11,
+    0,4,5,
+    0,7,8,
+    0,10,11,
     12,13,14,
-    15,16,17
+    12,13,17
 ];
 
 var cores_faces = [
@@ -98,15 +104,10 @@ function desenhe(delta)
 
     // Matriz de pespectiva
     const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
-    const near= 0.1;
-    const far = 100.0;
     const projectionMatrix = perspective(gFov,aspect,near,far)
 
     // Matriz Model View
-    const eye = vec3(3,3,3)
-    const at =  vec3(2,2,2)
-    const up =  vec3(1,1,4)
-    const modelViewMatrix = lookAt( eye, at, up );
+    var modelViewMatrix = lookAt( eye, at, up );
 
     // Leitura dos vertices
     {
@@ -125,6 +126,17 @@ function desenhe(delta)
             offset);
         gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
     }
+
+    // Transformacoes
+
+    matriz_rotacao = rotate(rotacao, vec3(0, 0, 1))
+    modelViewMatrix = mult(modelViewMatrix, matriz_rotacao)
+
+    matriz_rotacao = rotate(rotacao, vec3(0, 1, 0))
+    modelViewMatrix = mult(modelViewMatrix, matriz_rotacao)
+
+
+    rotacao = (rotacao + delta*1000)%360
 
     // Leitura das cores
     {
